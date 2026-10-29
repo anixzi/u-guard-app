@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>U-Guard 4.0 | Smart Mining</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+
+        :root {
+            --bg-main: #0c110d;
+            --bg-card: #161c18;
+            --bg-card-light: #1f2721;
+            --text-main: #e0e6e2;
+            --text-muted: #8b9690;
+            --accent-green: #6cf57c;
+            --alert-red: #ff4d4d;
+            --alert-red-bg: #3a1616;
+            --warning-yellow: #f5d76e;
+            --warning-bg: #3a3016;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #000; display: flex; justify-content: center; align-items: center; height: 100vh; color: var(--text-main); overflow: hidden;}
+
+        .phone { width: 100%; max-width: 400px; height: 100vh; max-height: 850px; background-color: var(--bg-main); position: relative; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(0, 255, 0, 0.15); border: 8px solid #222; border-radius: 35px; }
+
+        .status-bar { padding: 10px 20px 5px; display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 600; color: #fff; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); z-index: 10; }
+
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; padding: 40px 20px 80px; overflow-y: auto; background-color: var(--bg-main); animation: fadeIn 0.3s ease; }
+        .screen.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-size: 1.1rem; font-weight: 700; color: #fff; }
+        
+        .status-banner { display: flex; align-items: center; justify-content: space-between; background-color: var(--bg-card); padding: 10px 15px; border-radius: 12px; margin-bottom: 15px; font-size: 0.85rem; font-weight: 600; border: 1px solid transparent; transition: 0.3s;}
+        .status-dot { height: 8px; width: 8px; background-color: var(--accent-green); border-radius: 50%; display: inline-block; margin-right: 5px; box-shadow: 0 0 8px var(--accent-green); }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .card { background-color: var(--bg-card); border-radius: 15px; padding: 15px; position: relative; transition: 0.3s; border: 1px solid transparent;}
+        .card-title { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px; line-height: 1.3; }
+        .card-value { font-size: 1.4rem; font-weight: 700; color: #fff; margin-bottom: 5px; }
+        .card-diff { font-size: 0.75rem; font-weight: 600; }
+
+        .table-mini { width: 100%; font-size: 0.75rem; text-align: left; border-collapse: collapse; margin-top: 5px;}
+        .table-mini th { color: var(--text-muted); border-bottom: 1px solid #2a3a2f; padding: 4px 0;}
+        .table-mini td { padding: 4px 0; color: #fff;}
+
+        .quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 15px; }
+        .action-btn { background-color: var(--bg-card); border: none; border-radius: 12px; padding: 10px 2px; display: flex; flex-direction: column; align-items: center; color: var(--text-main); font-size: 0.65rem; font-weight: 600; cursor: pointer; transition: 0.2s;}
+        .action-btn:active { background-color: var(--bg-card-light); }
+        .action-icon { font-size: 1.3rem; margin-bottom: 3px; }
+
+        .btn { background-color: var(--accent-green); color: #000; border: none; padding: 12px; border-radius: 12px; font-size: 0.9rem; font-weight: 700; cursor: pointer; width: 100%; margin-bottom: 8px; transition: 0.3s; }
+        .btn:active { transform: scale(0.98); }
+        .btn-outline { background-color: transparent; border: 2px solid var(--accent-green); color: var(--accent-green); }
+        .btn-red { background-color: var(--alert-red); color: #fff; }
+        .btn-yellow { background-color: var(--warning-yellow); color: #000; border: 2px solid var(--warning-yellow);}
+
+        .map-area { height: 220px; background-color: #111813; border-radius: 15px; position: relative; background-image: radial-gradient(circle at 50% 50%, rgba(108, 245, 124, 0.1) 0%, transparent 60%), linear-gradient(0deg, rgba(0,0,0,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.6) 1px, transparent 1px); background-size: 100% 100%, 30px 30px, 30px 30px; margin-bottom: 15px; border: 1px solid #2a3a2f; display: flex; justify-content: center; align-items: center; }
+        .map-center { text-align: center; z-index: 2; background: rgba(0,0,0,0.6); padding: 8px; border-radius: 10px; border: 1px solid var(--accent-green); font-size: 0.75rem; font-weight: bold; }
+        
+        .map-dot { width: 14px; height: 14px; border-radius: 50%; position: absolute; box-shadow: 0 0 10px currentColor; z-index: 3; cursor: pointer; transition: 0.3s;}
+        .dot-green { background-color: var(--accent-green); color: var(--accent-green); }
+        .dot-yellow { background-color: var(--warning-yellow); color: var(--warning-yellow); animation: pulse-yellow 1s infinite; }
+        .dot-red { background-color: var(--alert-red); color: var(--alert-red); animation: pulse-red 1s infinite; }
+
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(255,77,77, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(255,77,77, 0); } 100% { box-shadow: 0 0 0 0 rgba(255,77,77, 0); } }
+        @keyframes pulse-yellow { 0% { box-shadow: 0 0 0 0 rgba(245,215,110, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(245,215,110, 0); } 100% { box-shadow: 0 0 0 0 rgba(245,215,110, 0); } }
+
+        .alert-banner { background-color: var(--warning-bg); border: 1px solid var(--warning-yellow); color: var(--warning-yellow); padding: 10px; border-radius: 10px; font-size: 0.8rem; display: none; margin-bottom: 15px; }
+        .alert-banner.active { display: block; animation: fadeIn 0.3s; }
+        .alert-banner.danger { background-color: var(--alert-red-bg); border-color: var(--alert-red); color: var(--alert-red); }
+
+        .bottom-nav { position: absolute; bottom: 0; left: 0; width: 100%; background-color: #0d120f; display: flex; justify-content: space-around; padding: 10px 5px; border-top: 1px solid #1f2721; z-index: 10; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 0.6rem; color: var(--text-muted); cursor: pointer; transition: 0.2s; }
+        .nav-icon { font-size: 1.2rem; margin-bottom: 2px; }
+        .nav-item.active { color: var(--accent-green); }
+
+        /* Экран тревоги */
+        #screen-alarm { background-color: #1a0a0a; z-index: 20; }
+        .alarm-header { text-align: center; margin-bottom: 20px;}
+        .alarm-icon { font-size: 4rem; margin-bottom: 10px; }
+        .alarm-title { color: var(--warning-yellow); font-size: 1.2rem; font-weight: 700; margin-bottom: 5px; }
+        .alarm-title.danger { color: var(--alert-red); }
+        
+        .status-flow { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 0.7rem; text-align: center; color: var(--text-muted);}
+        .status-step { flex: 1; border-top: 2px solid #333; padding-top: 5px; position: relative;}
+        .status-step.active { color: var(--warning-yellow); border-color: var(--warning-yellow); font-weight: bold;}
+        .status-step.danger { color: var(--alert-red); border-color: var(--alert-red); font-weight: bold;}
+
+        /* Чек-лист */
+        .checklist-item { display: flex; gap: 10px; align-items: center; font-size: 0.8rem; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.05); margin-bottom: 8px; cursor: pointer; transition: 0.2s;}
+        .checklist-item.done { background: rgba(108, 245, 124, 0.2); text-decoration: line-through; opacity: 0.6; }
+        .check-box { min-width: 20px; height: 20px; border: 2px solid var(--text-muted); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold;}
+        .checklist-item.done .check-box { background: var(--accent-green); border-color: var(--accent-green); color: #000; }
+
+        /* Кастомный калькулятор и база знаний */
+        .calc-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #2a3a2f; font-size: 0.85rem;}
+        .calc-row:last-child { border-bottom: none; font-size: 1rem; font-weight: bold; color: var(--accent-green); margin-top: 10px; padding-top: 10px;}
+        .formula-box { background-color: rgba(108, 245, 124, 0.1); border: 1px dashed var(--accent-green); padding: 8px; border-radius: 8px; font-family: monospace; text-align: center; color: var(--accent-green); margin: 8px 0; font-size: 0.85rem;}
+        .info-text { font-size: 0.75rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 10px;}
+        
+        .sensor-card { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 10px; border-radius: 10px; margin-bottom: 8px; border-left: 3px solid var(--accent-green);}
+        .sensor-card.warn { border-left-color: var(--warning-yellow); }
+        .sensor-name { font-size: 0.8rem; font-weight: bold; color: #fff;}
+        .sensor-status { font-size: 0.7rem; color: var(--accent-green); }
+        .sensor-status.warn { color: var(--warning-yellow); }
+
+    </style>
+</head>
+<body>
+
+<div class="phone">
+    <div class="status-bar">
+        <span>9:41</span>
+        <span>📶 🔋 100%</span>
+    </div>
+
+    <!-- СКРИН 1: ГЛАВНАЯ (С материальным балансом из PDF) -->
+    <div id="screen-dashboard" class="screen active">
+        <div class="header">
+            <span>☰ U-Guard</span>
+            <span>🔔 👤</span>
+        </div>
+        
+        <div class="status-banner" id="sys-banner">
+            <span>Сводка за смену</span>
+            <span id="sys-status"><span class="status-dot"></span>Норма</span>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title">Эффективность извлечения</div>
+                <div id="eff-value" class="card-value">95%</div>
+                <div class="card-diff" style="color:var(--text-muted);">Базовый сценарий</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Потери урана (в растворе)</div>
+                <div id="loss-value" class="card-value" style="color: var(--alert-red);">0,45 кг</div>
+                <div id="loss-diff" class="card-diff" style="color:var(--alert-red);">Конц. 3.0 мг/л</div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-bottom: 15px;">
+            <div class="card-title" style="color: var(--accent-green); font-weight: bold;">Материальный баланс (Демо)</div>
+            <table class="table-mini">
+                <tr><th>Показатель</th><th>При 95%</th><th>При 97%</th></tr>
+                <tr><td>Уран на входе</td><td>9,00 кг</td><td>9,00 кг</td></tr>
+                <tr><td>Извлечено</td><td>8,55 кг</td><td id="ext-97" style="color: var(--accent-green);">8,73 кг</td></tr>
+                <tr><td>Осталось в р-ре</td><td>0,45 кг</td><td id="loss-97" style="color: var(--accent-green);">0,27 кг</td></tr>
+                <tr><td>Конц. на выходе</td><td>3,0 мг/л</td><td id="conc-97" style="color: var(--accent-green);">1,8 мг/л</td></tr>
+            </table>
+        </div>
+
+        <button class="btn" id="upgrade-btn" onclick="upgradeTo97()">Внедрить смолу (97%)</button>
+        <button class="btn btn-outline" id="revert-btn" onclick="revertUpgrade()" style="display: none;">Отменить (Вернуть 95%)</button>
+        <button class="btn btn-outline" onclick="openCalculator()">Калькулятор экономии</button>
+
+        <div style="font-size: 0.85rem; font-weight: 700; color: #fff; margin-bottom: 8px; margin-top: 10px;">Быстрые действия</div>
+        <div class="quick-actions">
+            <div class="action-btn" onclick="nav('monitoring')"><span class="action-icon">📍</span>Карта</div>
+            <div class="action-btn" onclick="nav('sensors')"><span class="action-icon">📡</span>Датчики</div>
+            <div class="action-btn" onclick="nav('scenarios')"><span class="action-icon">🚨</span>Тревоги</div>
+            <div class="action-btn" onclick="nav('case')"><span class="action-icon">📚</span>База</div>
+        </div>
+    </div>
+
+    <!-- СКРИН 2: МОНИТОРИНГ -->
+    <div id="screen-monitoring" class="screen">
+        <div class="header">
+            <span>☰ Мониторинг среды</span>
+            <span>🔍</span>
+        </div>
+        
+        <div id="alert-banner" class="alert-banner">
+            ⚠️ <b>Зафиксировано отклонение!</b><br>Требуется проверка специалистом.
+        </div>
+
+        <div class="map-area">
+            <div class="map-center" id="map-center-text">Площадка ☣️</div>
+            <div id="dot-air" class="map-dot dot-green" style="top: 20%; left: 20%;" onclick="sensorClick('Воздух')"></div>
+            <div id="dot-soil" class="map-dot dot-green" style="top: 80%; left: 70%;" onclick="sensorClick('Почва')"></div>
+            <div id="dot-water" class="map-dot dot-green" style="top: 50%; left: 20%;" onclick="sensorClick('Вода')"></div>
+        </div>
+
+        <div class="card" style="padding: 12px;">
+            <div class="card-title">Данные точек (Вода)</div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 5px;">
+                <span>Точка 3 (Площадка):</span>
+                <span id="val-water" style="color: var(--accent-green); font-weight: bold;">0.008 мг/л</span>
+            </div>
+        </div>
+
+        <p class="info-text" style="margin-top: 10px;">* Система использует гибридную модель. Показания датчиков являются оперативными и требуют лабораторного подтверждения для точного определения концентрации урана.</p>
+
+        <button class="btn btn-outline" onclick="nav('scenarios')" style="margin-top: 10px;">Перейти к сценариям</button>
+    </div>
+
+    <!-- СКРИН 3: СЦЕНАРИИ ТРЕВОГ (С защитой от ложных срабатываний) -->
+    <div id="screen-scenarios" class="screen">
+        <div class="header">
+            <span>☰ Сценарии</span>
+            <span>🚨</span>
+        </div>
+        <p class="info-text">Выберите сценарий. По правилам U-Guard, система сначала фиксирует «Подозрение», и только после подтверждения переводит в статус «Авария».</p>
+
+        <button class="btn btn-yellow" onclick="triggerScenario('water')">💧 Датчик воды: Отклонение</button>
+        <button class="btn btn-yellow" onclick="triggerScenario('air')">💨 Датчик воздуха: Отклонение</button>
+        <button class="btn btn-red" onclick="triggerScenario('leak')">☣️ Прямая утечка (Подтверждена)</button>
+        
+        <button class="btn btn-outline" onclick="resolveAlarm()" style="margin-top: 20px;">Сбросить систему</button>
+    </div>
+
+    <!-- СКРИН 4: ДАТЧИКИ (Из PDF: статусы калибровки) -->
+    <div id="screen-sensors" class="screen">
+        <div class="header">
+            <span>☰ Датчики</span>
+            <span>📡</span>
+        </div>
+        
+        <div class="sensor-card">
+            <div>
+                <div class="sensor-name">Спектрометр (Лаборатория)</div>
+                <div class="sensor-status">Онлайн • Калибровка: OK</div>
+            </div>
+            <span>🟢</span>
+        </div>
+        <div class="sensor-card">
+            <div>
+                <div class="sensor-name">Датчик воды (Точка 3)</div>
+                <div class="sensor-status">Онлайн • Калибровка: 12.10.2026</div>
+            </div>
+            <span>🟢</span>
+        </div>
+        <div class="sensor-card warn">
+            <div>
+                <div class="sensor-name">Газоанализатор (Воздух)</div>
+                <div class="sensor-status warn">Требует калибровки (30 дней)</div>
+            </div>
+            <span>🟡</span>
+        </div>
+        
+        <p class="info-text" style="margin-top: 15px;">Согласно концепции, приложение не заменяет лабораторию. Стационарные датчики отслеживают косвенные параметры, а точная концентрация урана определяется в лаборатории.</p>
+    </div>
+
+    <!-- СКРИН 5: АВАРИЯ (Overlay с этапами) -->
+    <div id="screen-alarm" class="screen">
+        <div class="alarm-header">
+            <div class="alarm-icon" id="alarm-icon">⚠️</div>
+            <div class="alarm-title" id="alarm-title">Подозрение на утечку</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);" id="alarm-subtitle">Зафиксировано отклонение датчиком</div>
+        </div>
+        
+        <div class="status-flow" id="alarm-steps">
+            <div class="status-step active" id="step-1">Зарегистрировано</div>
+            <div class="status-step" id="step-2">Проверка</div>
+            <div class="status-step" id="step-3">Подтверждено</div>
+        </div>
+
+        <div style="background: var(--bg-card); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+            <p style="font-size: 0.8rem; color: #fff; line-height: 1.5;" id="alarm-desc">
+                Датчик воды зафиксировал повышение показателей. Согласно регламенту, требуется отправка пробы в лабораторию для подтверждения концентрации.
+            </p>
+        </div>
+        
+        <button class="btn btn-yellow" id="btn-confirm-lab" onclick="confirmLab()">Подтвердить лабораторией</button>
+        <button class="btn btn-outline" onclick="nav('safety')">⚠️ Перейти к инструкции</button>
+        <button class="btn btn-red" onclick="resolveAlarm()">Закрыть событие (Ложная тревога)</button>
+    </div>
+
+    <!-- СКРИН 6: БЕЗОПАСНОСТЬ -->
+    <div id="screen-safety" class="screen">
+        <div class="header">
+            <span>☰ Безопасность</span>
+            <span>🛡️</span>
+        </div>
+        
+        <div style="font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 5px;">При подозрении на утечку</div>
+        <p class="info-text">Действия строго по регламенту (PDF).</p>
+
+        <div class="checklist-item" onclick="toggleCheck(this)">
+            <div class="check-box"></div>
+            <div>Не приближаться к источнику.</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+            <div class="check-box"></div>
+            <div>Предупредить людей рядом.</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+            <div class="check-box"></div>
+            <div>Сообщить руководителю смены.</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+            <div class="check-box"></div>
+            <div>Покинуть опасную зону по маршруту.</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+            <div class="check-box"></div>
+            <div>Не трогать загрязненные предметы и не смывать в канализацию.</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+            <div class="check-box"></div>
+            <div>Дождаться аварийного персонала.</div>
+        </div>
+
+        <button class="btn" style="margin-top: 15px;" onclick="resetChecklist()">Сбросить чек-лист</button>
+    </div>
+
+    <!-- СКРИН 7: БАЗА ЗНАНИЙ (Из PDF) -->
+    <div id="screen-case" class="screen">
+        <div class="header">
+            <span>☰ База знаний</span>
+            <span>📚</span>
+        </div>
+        
+        <div class="card" style="margin-bottom: 10px;">
+            <div class="card-title" style="color: var(--warning-yellow);">1. Научная честность</div>
+            <p class="info-text">U-Guard — это концепт. Не существует дешевого датчика для непрерывного измерения урана. Поэтому система использует <b>гибридную модель</b> (датчики + лаборатория).</p>
+        </div>
+
+        <div class="card" style="margin-bottom: 10px;">
+            <div class="card-title" style="color: var(--warning-yellow);">2. Материальный баланс</div>
+            <p class="info-text">При 95%: извлечено 8,55 кг, потери 0,45 кг.</p>
+            <p class="info-text">При 97%: извлечено 8,73 кг, потери 0,27 кг.</p>
+            <p class="info-text">Концентрация на выходе падает с 3,0 до 1,8 мг/л.</p>
+        </div>
+
+        <div class="card" style="margin-bottom: 10px;">
+            <div class="card-title" style="color: var(--warning-yellow);">3. Годовая экономия</div>
+            <p class="info-text">Дополнительное извлечение: 0,18 кг/смену.</p>
+            <div class="formula-box">0,18 × 730 смен = 131,4 кг/год</div>
+            <p class="info-text">При цене 10 000 руб/кг = <b>1 314 000 руб/год</b>.</p>
+        </div>
+
+        <div class="card">
+            <div class="card-title" style="color: var(--warning-yellow);">4. Ограничения</div>
+            <p class="info-text">Приложение не заменяет профессиональную оценку, лабораторный анализ и штатные аварийные системы. Все данные на экране — демонстрационные.</p>
+        </div>
+    </div>
+
+    <!-- СКРИН 8: КАЛЬКУЛЯТОР -->
+    <div id="screen-calc" class="screen" style="z-index: 30; background-color: rgba(12, 17, 13, 0.95);">
+        <div class="header">
+            <span>Калькулятор ROI</span>
+            <span onclick="nav('dashboard')" style="cursor: pointer; color: var(--alert-red);">✖</span>
+        </div>
+        
+        <div class="card">
+            <div class="calc-row"><span>Входной уран:</span><span><b>9,00 кг</b></span></div>
+            <div class="calc-row"><span>Потери (95%):</span><span style="color: var(--alert-red);">0,45 кг</span></div>
+            <div class="calc-row"><span>Потери (97%):</span><span style="color: var(--accent-green);">0,27 кг</span></div>
+            <div class="calc-row"><span>Разница:</span><span>0,18 кг</span></div>
+            <div class="calc-row"><span>Цена:</span><span>10 000 ₽/кг</span></div>
+            <div class="calc-row"><span>Год (730 смен):</span><span>131,4 кг</span></div>
+            <div class="calc-row"><span>Экономия:</span><span>1 314 000 ₽</span></div>
+        </div>
+        
+        <button class="btn" style="margin-top: 20px;" onclick="upgradeTo97()">Применить 97%</button>
+    </div>
+
+    <!-- НИЖНЕЕ МЕНЮ -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="nav('dashboard', this)">
+            <span class="nav-icon">🏠</span><span>Главная</span>
+        </div>
+        <div class="nav-item" onclick="nav('monitoring', this)">
+            <span class="nav-icon">📍</span><span>Карта</span>
+        </div>
+        <div class="nav-item" onclick="nav('scenarios', this)">
+            <span class="nav-icon">🚨</span><span>Аварии</span>
+        </div>
+        <div class="nav-item" onclick="nav('sensors', this)">
+            <span class="nav-icon">📡</span><span>Датчики</span>
+        </div>
+        <div class="nav-item" onclick="nav('safety', this)">
+            <span class="nav-icon">🛡️</span><span>СИЗ</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Навигация
+    function nav(screenId, element = null) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('screen-' + screenId).classList.add('active');
+
+        if (element) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            element.classList.add('active');
+        } else {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            if (screenId === 'dashboard') document.querySelectorAll('.nav-item')[0].classList.add('active');
+            if (screenId === 'monitoring') document.querySelectorAll('.nav-item')[1].classList.add('active');
+            if (screenId === 'scenarios') document.querySelectorAll('.nav-item')[2].classList.add('active');
+            if (screenId === 'sensors') document.querySelectorAll('.nav-item')[3].classList.add('active');
+            if (screenId === 'safety') document.querySelectorAll('.nav-item')[4].classList.add('active');
+        }
+    }
+
+    // Модернизация
+    function upgradeTo97() {
+        document.getElementById('eff-value').innerText = "97%";
+        document.getElementById('eff-value').style.color = "var(--accent-green)";
+        document.getElementById('loss-value').innerText = "0,27 кг";
+        document.getElementById('loss-value').style.color = "var(--accent-green)";
+        document.getElementById('loss-diff').innerText = "Конц. 1.8 мг/л";
+        document.getElementById('loss-diff').style.color = "var(--accent-green)";
+        
+        // Подсветка в таблице
+        document.getElementById('ext-97').style.backgroundColor = "rgba(108, 245, 124, 0.2)";
+        document.getElementById('loss-97').style.backgroundColor = "rgba(108, 245, 124, 0.2)";
+        document.getElementById('conc-97').style.backgroundColor = "rgba(108, 245, 124, 0.2)";
+
+        document.getElementById('upgrade-btn').style.display = 'none';
+        document.getElementById('revert-btn').style.display = 'block';
+        document.getElementById('sys-status').innerHTML = "<span class='status-dot'></span>Оптимизировано (97%)";
+        
+        nav('dashboard');
+        showToast("Применено 97%! Годовая экономия 1,314 млн руб.");
+    }
+
+    function revertUpgrade() {
+        document.getElementById('eff-value').innerText = "95%";
+        document.getElementById('eff-value').style.color = "#fff";
+        document.getElementById('loss-value').innerText = "0,45 кг";
+        document.getElementById('loss-value').style.color = "var(--alert-red)";
+        document.getElementById('loss-diff').innerText = "Конц. 3.0 мг/л";
+        document.getElementById('loss-diff').style.color = "var(--alert-red)";
+        
+        document.getElementById('ext-97').style.backgroundColor = "transparent";
+        document.getElementById('loss-97').style.backgroundColor = "transparent";
+        document.getElementById('conc-97').style.backgroundColor = "transparent";
+
+        document.getElementById('upgrade-btn').style.display = 'block';
+        document.getElementById('revert-btn').style.display = 'none';
+        document.getElementById('sys-status').innerHTML = "<span class='status-dot'></span>Норма";
+        
+        showToast("Возврат к базовому сценарию 95%.");
+    }
+
+    function openCalculator() { nav('calc'); }
+
+    // Сценарии (Гибридная модель)
+    function triggerScenario(type) {
+        resetSensors();
+        
+        // Сброс шагов тревоги
+        document.querySelectorAll('.status-step').forEach(s => s.className = 'status-step');
+        document.getElementById('step-1').classList.add('active');
+
+        if (type === 'water') {
+            document.getElementById('dot-water').className = "map-dot dot-yellow";
+            document.getElementById('val-water').innerText = "0.05 мг/л (Проверка)";
+            document.getElementById('val-water').style.color = "var(--warning-yellow)";
+            document.getElementById('alarm-title').innerText = "Подозрение на утечку";
+            document.getElementById('alarm-subtitle').innerText = "Датчик воды Точка 3";
+            document.getElementById('alarm-desc').innerHTML = "Датчик зафиксировал рост показателей.<br><b>Требуется подтверждение лаборатории.</b>";
+            document.getElementById('btn-confirm-lab').style.display = 'block';
+            document.getElementById('btn-confirm-lab').innerText = "Подтвердить лабораторией";
+        } else if (type === 'air') {
+            document.getElementById('dot-air').className = "map-dot dot-yellow";
+            document.getElementById('alarm-title').innerText = "Отклонение (Воздух)";
+            document.getElementById('alarm-subtitle').innerText = "Газоанализатор";
+            document.getElementById('alarm-desc').innerHTML = "Превышение пыли. Датчик требует калибровки.<br><b>Рекомендуется отбор пробы.</b>";
+            document.getElementById('btn-confirm-lab').style.display = 'block';
+            document.getElementById('btn-confirm-lab').innerText = "Подтвердить пробой";
+        } else if (type === 'leak') {
+            document.getElementById('dot-water').className = "map-dot dot-red";
+            document.getElementById('alarm-title').innerText = "АВАРИЯ!";
+            document.getElementById('alarm-title').className = "alarm-title danger";
+            document.getElementById('alarm-icon').innerText = "☣️";
+            document.getElementById('alarm-subtitle').innerText = "Утечка подтверждена";
+            document.getElementById('alarm-desc').innerHTML = "Зафиксирована прямая утечка в воду.<br><b>Немедленно эвакуируйтесь!</b>";
+            
+            document.getElementById('step-1').classList.add('active');
+            document.getElementById('step-2').classList.add('active');
+            document.getElementById('step-3').classList.add('danger');
+            document.getElementById('btn-confirm-lab').style.display = 'none';
+        }
+
+        document.getElementById('alert-banner').classList.add('active');
+        document.getElementById('sys-status').innerHTML = "<span class='status-dot' style='background:var(--warning-yellow); box-shadow:0 0 8px var(--warning-yellow);'></span>Внимание";
+        
+        setTimeout(() => { nav('alarm'); }, 800);
+    }
+
+    // Подтверждение лабораторией
+    function confirmLab() {
+        document.getElementById('step-2').classList.add('active');
+        
+        setTimeout(() => {
+            document.getElementById('step-3').classList.add('danger');
+            document.getElementById('step-3').innerText = "Подтверждено";
+            
+            document.getElementById('alarm-title').innerText = "АВАРИЯ ПОДТВЕРЖДЕНА";
+            document.getElementById('alarm-title').className = "alarm-title danger";
+            document.getElementById('alarm-desc').innerHTML = "<b>Лаборатория подтвердила превышение!</b><br>Концентрация урана 0.32 мг/л. Необходима эвакуация.";
+            
+            document.getElementById('dot-water').className = "map-dot dot-red";
+            document.getElementById('val-water').innerText = "0.32 мг/л (Авария)";
+            document.getElementById('val-water').style.color = "var(--alert-red)";
+            
+            document.getElementById('btn-confirm-lab').style.display = 'none';
+            showToast("⚠️ Лаборатория подтвердила аварию!");
+        }, 1500);
+    }
+
+    function resolveAlarm() {
+        resetSensors();
+        document.getElementById('alert-banner').classList.remove('active');
+        document.getElementById('sys-status').innerHTML = "<span class='status-dot'></span>Норма";
+        nav('monitoring');
+        showToast("Событие закрыто. Датчики в норме.");
+    }
+
+    function resetSensors() {
+        document.getElementById('dot-water').className = "map-dot dot-green";
+        document.getElementById('dot-air').className = "map-dot dot-green";
+        document.getElementById('dot-soil').className = "map-dot dot-green";
+        document.getElementById('val-water').innerText = "0.008 мг/л";
+        document.getElementById('val-water').style.color = "var(--accent-green)";
+        document.getElementById('alarm-title').className = "alarm-title";
+        document.getElementById('alarm-icon').innerText = "⚠️";
+    }
+
+    // Чек-лист
+    function toggleCheck(element) {
+        element.classList.toggle('done');
+        if (element.classList.contains('done')) {
+            element.querySelector('.check-box').innerText = "✔";
+        } else {
+            element.querySelector('.check-box').innerText = "";
+        }
+    }
+
+    function resetChecklist() {
+        document.querySelectorAll('.checklist-item').forEach(item => {
+            item.classList.remove('done');
+            item.querySelector('.check-box').innerText = "";
+        });
+    }
+
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+            background-color: var(--accent-green); color: #000; padding: 10px 20px;
+            border-radius: 20px; font-weight: bold; font-size: 0.8rem; z-index: 100;
+            box-shadow: 0 5px 15px rgba(0,230,118,0.4); animation: fadeIn 0.3s; width: 80%; text-align: center;
+        `;
+        toast.innerText = message;
+        document.querySelector('.phone').appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transition = '0.3s';
+            setTimeout(() => toast.remove(), 300);
+        }, 2500);
+    }
+
+    function sensorClick(name) {
+        showToast(`Датчик "${name}": Данные актуальны`);
+    }
+</script>
+
+</body>
+</html>
